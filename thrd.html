@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Animation Window</title>
+    <style>
+        #animation-container {
+            position: relative;
+        }
+
+        #animation-window {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border: 1px solid black;
+        }
+
+        #add-image-button {
+            position: absolute;
+            top: 10px;
+            left: calc(100% + 10px); /* Move the "+" button to the outside of the right border */
+            cursor: pointer;
+            font-size: 24px;
+            border: 1px solid black;
+            padding: 5px;
+        }
+
+        .movable-image {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            outline: none; /* Remove the default focus border */
+        }
+
+        .selected-image {
+            border: 2px solid black;
+        }
+    </style>
+</head>
+<body>
+    <div id="animation-container">
+        <div id="animation-window">
+            <!-- The images will be added here -->
+        </div>
+    </div>
+    <div id="add-image-button" onclick="addImage()">+</div>
+
+    <!-- Hidden input element for selecting images -->
+    <input type="file" id="image-input" style="display: none;" onchange="handleImageSelect(event)">
+    
+    <script>
+        function addImage() {
+            // Trigger the hidden file input element when the "+" sign is clicked
+            const imageInput = document.getElementById('image-input');
+            imageInput.click();
+        }
+
+        function handleImageSelect(event) {
+            const animationWindow = document.getElementById('animation-window');
+            const file = event.target.files[0];
+            if (!file) return; // User canceled file selection
+            
+            const image = new Image();
+            image.src = URL.createObjectURL(file);
+
+            // Set a random position for the image within the animation window
+            const randomX = Math.floor(Math.random() * (animationWindow.offsetWidth - 100));
+            const randomY = Math.floor(Math.random() * (animationWindow.offsetHeight - 100));
+            image.style.left = randomX + 'px';
+            image.style.top = randomY + 'px';
+
+            // Make the image movable using keyboard arrows
+            image.classList.add('movable-image');
+            image.addEventListener('click', (event) => {
+                event.stopPropagation();
+
+                // Remove the focus from all other images
+                const images = document.querySelectorAll('.movable-image');
+                images.forEach(img => img.classList.remove('selected-image'));
+
+                // Mark the image with a black border to indicate selection
+                image.classList.add('selected-image');
+                image.focus();
+            });
+
+            // Set the fixed size for the image
+            image.style.width = '100px';
+            image.style.height = '100px';
+
+            // Add the image to the animation window
+            animationWindow.appendChild(image);
+            image.focus();
+        }
+
+        // Arrow key event listeners to move the selected image
+        document.addEventListener('keydown', (event) => {
+            const selectedImage = document.querySelector('.selected-image');
+            if (selectedImage) {
+                const moveAmount = 10; // Adjust this value to control the speed of movement
+
+                switch (event.key) {
+                    case 'ArrowUp':
+                        selectedImage.style.top = (parseInt(selectedImage.style.top) - moveAmount) + 'px';
+                        break;
+                    case 'ArrowDown':
+                        selectedImage.style.top = (parseInt(selectedImage.style.top) + moveAmount) + 'px';
+                        break;
+                    case 'ArrowLeft':
+                        selectedImage.style.left = (parseInt(selectedImage.style.left) - moveAmount) + 'px';
+                        break;
+                    case 'ArrowRight':
+                        selectedImage.style.left = (parseInt(selectedImage.style.left) + moveAmount) + 'px';
+                        break;
+                }
+
+                const animationWindow = document.getElementById('animation-window');
+                const maxX = animationWindow.offsetWidth - parseInt(selectedImage.style.width);
+                const maxY = animationWindow.offsetHeight - parseInt(selectedImage.style.height);
+                selectedImage.style.left = Math.max(0, Math.min(parseInt(selectedImage.style.left), maxX)) + 'px';
+                selectedImage.style.top = Math.max(0, Math.min(parseInt(selectedImage.style.top), maxY)) + 'px';
+            }
+        });
+
+        // Dynamically position the "+" button to the outside of the right border of the animation window
+        function positionAddButton() {
+            const addButton = document.getElementById('add-image-button');
+            const animationWindow = document.getElementById('animation-window');
+            addButton.style.left = (animationWindow.offsetLeft + animationWindow.offsetWidth + 10) + 'px';
+        }
+
+        // Initial positioning and update on window resize
+        positionAddButton();
+        window.addEventListener('resize', positionAddButton);
+    </script>
+</body>
+</html>
